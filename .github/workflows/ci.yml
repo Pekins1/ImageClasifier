@@ -1,0 +1,209 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  # Code Quality & Linting
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 black isort mypy bandit
+
+      - name: Run flake8
+        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Run black (check formatting)
+        run: black --check .
+
+      - name: Run isort (check import sorting)
+        run: isort --check-only .
+
+      - name: Run mypy
+        run: mypy . --ignore-missing-imports
+
+      - name: Run bandit security scan
+        run: bandit -r . -f json -o bandit-report.json || true
+
+  # Unit Tests
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Run tests with coverage
+        run: |
+          pytest tests/ --cov=. --cov-report=xml --cov-report=html
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  # Data Validation
+  data-validation:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Validate dataset structure
+        run: |
+          python -c "
+          from pathlib import Path
+          import sys
+
+          # Check if required directories exist
+          required_dirs = ['bears/black bear', 'bears/grizzly bear', 'bears/teddy bear']
+          missing_dirs = [d for d in required_dirs if not Path(d).exists()]
+
+          if missing_dirs:
+              print(f'Missing directories: {missing_dirs}')
+              sys.exit(1)
+
+          # Check if directories contain images
+          for dir_path in required_dirs:
+              images = list(Path(dir_path).glob('*.jpg')) + list(Path(dir_path).glob('*.jpeg')) + list(Path(dir_path).glob('*.png'))
+              if not images:
+                  print(f'No images found in {dir_path}')
+                  sys.exit(1)
+              print(f'{dir_path}: {len(images)} images')
+
+          print('Dataset validation passed!')
+          "
+
+  # Model Tests (if model file exists)
+  model-test:
+    runs-on: ubuntu-latest
+    needs: [lint, data-validation]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Test model loading and prediction
+        run: |
+          python -c "
+          from pathlib import Path
+          import sys
+
+          # Check if model file exists
+          if not Path('export.pkl').exists():
+              print('Model file not found, skipping model tests')
+              sys.exit(0)
+
+          try:
+              from fastai.vision.all import *
+              
+              # Test model loading
+              learn = load_learner('export.pkl', cpu=True)
+              print('Model loaded successfully')
+              
+              # Test prediction on a sample image
+              if Path('images').exists() and list(Path('images').glob('*.jpg')):
+                  sample_img = PILImage.create(list(Path('images').glob('*.jpg'))[0])
+                  pred, pred_idx, probs = learn.predict(sample_img)
+                  print(f'Prediction test passed: {pred}')
+              else:
+                  print('No test images found, skipping prediction test')
+                  
+          except Exception as e:
+              print(f'Model test failed: {e}')
+              sys.exit(1)
+          "
+
+  # Build and Package
+  build:
+    runs-on: ubuntu-latest
+    needs: [test, model-test]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install build twine
+
+      - name: Build package
+        run: python -m build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-files
+          path: dist/
+
+  # Security Scan
+  security:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: "trivy-results.sarif"
