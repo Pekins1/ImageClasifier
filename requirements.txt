@@ -49,6 +49,7 @@ pillow==11.2.1
 plum-dispatch==2.5.7
 preshed==3.0.10
 prompt_toolkit==3.0.51
+psutil>=5.9.0
 pure_eval==0.2.3
 pydantic==2.11.5
 pydantic_core==2.33.2
