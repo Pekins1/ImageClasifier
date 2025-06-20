@@ -97,7 +97,9 @@ class TestDatasetStructure:
 
                 for img_file in image_files:
                     # Check for common naming patterns
-                    assert " " not in img_file.name, f"Filename contains spaces: {img_file.name}"
+                    assert (
+                        " " not in img_file.name
+                    ), f"Filename contains spaces: {img_file.name}"
 
                     # Should have valid extension
                     assert img_file.suffix.lower() in [
@@ -128,12 +130,20 @@ class TestImageQuality:
                             width, height = img.size
 
                             # Check minimum resolution
-                            assert width >= 50, f"Image {img_file} too narrow: {width}px"
-                            assert height >= 50, f"Image {img_file} too short: {height}px"
+                            assert (
+                                width >= 50
+                            ), f"Image {img_file} too narrow: {width}px"
+                            assert (
+                                height >= 50
+                            ), f"Image {img_file} too short: {height}px"
 
                             # Check maximum resolution (reasonable limit)
-                            assert width <= 8000, f"Image {img_file} too wide: {width}px"
-                            assert height <= 8000, f"Image {img_file} too tall: {height}px"
+                            assert (
+                                width <= 8000
+                            ), f"Image {img_file} too wide: {width}px"
+                            assert (
+                                height <= 8000
+                            ), f"Image {img_file} too tall: {height}px"
 
                     except Exception as e:
                         pytest.fail(f"Failed to check image {img_file}: {e}")
