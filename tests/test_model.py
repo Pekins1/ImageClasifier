@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 class TestModelLoading:
     """Test model loading functionality."""
 
-    def test_model_file_exists(self):
+    def test_model_file_exists(self) -> None:
         """Test that the model file exists."""
         model_path = Path("export.pkl")
         if model_path.exists():
@@ -25,7 +25,7 @@ class TestModelLoading:
             pytest.skip("Model file not found")
 
     @patch("fastai.vision.all.load_learner")
-    def test_model_loading_success(self, mock_load_learner):
+    def test_model_loading_success(self, mock_load_learner: Mock) -> None:
         """Test successful model loading."""
         mock_learner = Mock()
         mock_load_learner.return_value = mock_learner
@@ -37,7 +37,7 @@ class TestModelLoading:
         assert learn is not None
         mock_load_learner.assert_called_once_with("export.pkl", cpu=True)
 
-    def test_model_loading_with_cpu(self):
+    def test_model_loading_with_cpu(self) -> None:
         """Test model loading with CPU flag."""
         model_path = Path("export.pkl")
         if not model_path.exists():
@@ -55,14 +55,14 @@ class TestModelLoading:
 class TestPrediction:
     """Test prediction functionality."""
 
-    def test_prediction_input_validation(self):
+    def test_prediction_input_validation(self) -> None:
         """Test prediction input validation."""
         model_path = Path("export.pkl")
         if not model_path.exists():
             pytest.skip("Model file not found")
 
         try:
-            from fastai.vision.all import PILImage, load_learner
+            from fastai.vision.all import load_learner
 
             learn = load_learner("export.pkl", cpu=True)
 
@@ -73,7 +73,7 @@ class TestPrediction:
         except Exception as e:
             pytest.fail(f"Prediction test failed: {e}")
 
-    def test_prediction_output_format(self):
+    def test_prediction_output_format(self) -> None:
         """Test prediction output format."""
         model_path = Path("export.pkl")
         if not model_path.exists():
@@ -117,7 +117,7 @@ class TestPrediction:
         except Exception as e:
             pytest.fail(f"Prediction format test failed: {e}")
 
-    def test_prediction_classes(self):
+    def test_prediction_classes(self) -> None:
         """Test that predictions are from expected classes."""
         model_path = Path("export.pkl")
         if not model_path.exists():
@@ -148,7 +148,7 @@ class TestPrediction:
 class TestModelPerformance:
     """Test model performance characteristics."""
 
-    def test_prediction_speed(self):
+    def test_prediction_speed(self) -> None:
         """Test that predictions complete within reasonable time."""
         import time
 
@@ -170,7 +170,7 @@ class TestModelPerformance:
 
             # Time the prediction
             start_time = time.time()
-            pred, pred_idx, probs = learn.predict(img)
+            learn.predict(img)
             end_time = time.time()
 
             prediction_time = end_time - start_time
@@ -183,7 +183,7 @@ class TestModelPerformance:
         except Exception as e:
             pytest.fail(f"Prediction speed test failed: {e}")
 
-    def test_model_memory_usage(self):
+    def test_model_memory_usage(self) -> None:
         """Test that model doesn't use excessive memory."""
         import os
 
@@ -199,7 +199,7 @@ class TestModelPerformance:
 
             from fastai.vision.all import load_learner
 
-            learn = load_learner("export.pkl", cpu=True)
+            load_learner("export.pkl", cpu=True)
 
             after_load_memory = process.memory_info().rss / 1024 / 1024  # MB
             memory_increase = after_load_memory - initial_memory

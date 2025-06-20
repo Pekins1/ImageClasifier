@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 class TestEndToEndPipeline:
     """Test the complete end-to-end prediction pipeline."""
 
-    def test_complete_prediction_workflow(self):
+    def test_complete_prediction_workflow(self) -> None:
         """Test the complete workflow from image input to prediction output."""
         model_path = Path("export.pkl")
         if not model_path.exists():
@@ -67,7 +67,7 @@ class TestEndToEndPipeline:
         except Exception as e:
             pytest.fail(f"End-to-end test failed: {e}")
 
-    def test_multiple_image_predictions(self):
+    def test_multiple_image_predictions(self) -> None:
         """Test predictions on multiple images."""
         model_path = Path("export.pkl")
         if not model_path.exists():
@@ -83,7 +83,7 @@ class TestEndToEndPipeline:
             learn = load_learner("export.pkl", cpu=True)
             image_files = list(test_image_path.glob("*.jpg"))
 
-            predictions = []
+            predictions: list[str] = []
             for img_file in image_files[:3]:  # Test first 3 images
                 img = PILImage.create(img_file)
                 pred, pred_idx, probs = learn.predict(img)
@@ -103,7 +103,9 @@ class TestFileUploadWorkflow:
 
     @patch("fastai.vision.all.PILImage")
     @patch("fastai.vision.all.load_learner")
-    def test_file_upload_simulation(self, mock_load_learner, mock_pil_image):
+    def test_file_upload_simulation(
+        self, mock_load_learner: Mock, mock_pil_image: Mock
+    ) -> None:
         """Simulate file upload workflow."""
         # Mock the learner
         mock_learner = Mock()
@@ -141,7 +143,7 @@ class TestFileUploadWorkflow:
 class TestErrorHandling:
     """Test error handling in the application."""
 
-    def test_invalid_image_handling(self):
+    def test_invalid_image_handling(self) -> None:
         """Test handling of invalid image files."""
         model_path = Path("export.pkl")
         if not model_path.exists():
@@ -163,16 +165,16 @@ class TestErrorHandling:
         except Exception as e:
             pytest.fail(f"Error handling test failed: {e}")
 
-    def test_missing_model_file(self):
+    def test_missing_model_file(self) -> None:
         """Test behavior when model file is missing."""
         try:
             from fastai.vision.all import load_learner
 
             # This should raise an exception
             with pytest.raises(Exception):
-                learn = load_learner("nonexistent_model.pkl", cpu=True)
+                load_learner("nonexistent_model.pkl", cpu=True)
 
-        except Exception as e:
+        except Exception:
             # This is expected behavior
             pass
 
@@ -180,7 +182,7 @@ class TestErrorHandling:
 class TestPerformanceIntegration:
     """Test performance characteristics in integration scenarios."""
 
-    def test_concurrent_predictions(self):
+    def test_concurrent_predictions(self) -> None:
         """Test handling multiple predictions in sequence."""
         import time
 
@@ -206,7 +208,7 @@ class TestPerformanceIntegration:
             # Make multiple predictions
             for img_file in image_files[:3]:
                 img = PILImage.create(img_file)
-                pred, pred_idx, probs = learn.predict(img)
+                learn.predict(img)
 
             end_time = time.time()
             total_time = end_time - start_time
@@ -219,7 +221,7 @@ class TestPerformanceIntegration:
         except Exception as e:
             pytest.fail(f"Concurrent predictions test failed: {e}")
 
-    def test_memory_usage_integration(self):
+    def test_memory_usage_integration(self) -> None:
         """Test memory usage during integration workflow."""
         import os
 
@@ -246,7 +248,7 @@ class TestPerformanceIntegration:
             image_files = list(test_image_path.glob("*.jpg"))
             for img_file in image_files[:5]:
                 img = PILImage.create(img_file)
-                pred, pred_idx, probs = learn.predict(img)
+                learn.predict(img)
 
             final_memory = process.memory_info().rss / 1024 / 1024  # MB
             memory_increase = final_memory - initial_memory
@@ -265,7 +267,7 @@ class TestPerformanceIntegration:
 class TestDataPipeline:
     """Test data processing pipeline."""
 
-    def test_image_preprocessing(self):
+    def test_image_preprocessing(self) -> None:
         """Test image preprocessing steps."""
         test_image_path = Path("images")
         if not test_image_path.exists() or not list(test_image_path.glob("*.jpg")):

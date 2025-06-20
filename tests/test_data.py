@@ -12,7 +12,7 @@ from PIL import Image
 class TestDatasetStructure:
     """Test dataset directory structure and organization."""
 
-    def test_required_directories_exist(self):
+    def test_required_directories_exist(self) -> None:
         """Test that all required directories exist."""
         required_dirs = ["bears/black bear", "bears/grizzly bear", "bears/teddy bear"]
 
@@ -21,7 +21,7 @@ class TestDatasetStructure:
             assert path.exists(), f"Directory {dir_path} does not exist"
             assert path.is_dir(), f"{dir_path} is not a directory"
 
-    def test_dataset_has_images(self):
+    def test_dataset_has_images(self) -> None:
         """Test that each class directory contains images."""
         class_dirs = ["bears/black bear", "bears/grizzly bear", "bears/teddy bear"]
 
@@ -29,21 +29,21 @@ class TestDatasetStructure:
             path = Path(class_dir)
             if path.exists():
                 # Look for common image formats
-                image_files = []
+                image_files: list[Path] = []
                 for ext in ["*.jpg", "*.jpeg", "*.png", "*.bmp", "*.tiff"]:
                     image_files.extend(path.glob(ext))
 
                 assert len(image_files) > 0, f"No images found in {class_dir}"
                 print(f"{class_dir}: {len(image_files)} images")
 
-    def test_image_file_integrity(self):
+    def test_image_file_integrity(self) -> None:
         """Test that image files can be opened and are valid."""
         class_dirs = ["bears/black bear", "bears/grizzly bear", "bears/teddy bear"]
 
         for class_dir in class_dirs:
             path = Path(class_dir)
             if path.exists():
-                image_files = []
+                image_files: list[Path] = []
                 for ext in ["*.jpg", "*.jpeg", "*.png"]:
                     image_files.extend(path.glob(ext))
 
@@ -62,15 +62,15 @@ class TestDatasetStructure:
                     except Exception as e:
                         pytest.fail(f"Failed to open image {img_file}: {e}")
 
-    def test_class_balance(self):
+    def test_class_balance(self) -> None:
         """Test that classes have reasonable balance (not too skewed)."""
         class_dirs = ["bears/black bear", "bears/grizzly bear", "bears/teddy bear"]
 
-        class_counts = {}
+        class_counts: dict[str, int] = {}
         for class_dir in class_dirs:
             path = Path(class_dir)
             if path.exists():
-                image_files = []
+                image_files: list[Path] = []
                 for ext in ["*.jpg", "*.jpeg", "*.png"]:
                     image_files.extend(path.glob(ext))
                 class_counts[class_dir] = len(image_files)
@@ -84,25 +84,20 @@ class TestDatasetStructure:
             ratio = max_count / min_count if min_count > 0 else float("inf")
             assert ratio <= 10, f"Class imbalance too high: {ratio:.1f}x difference"
 
-    def test_file_naming_convention(self):
+    def test_file_naming_convention(self) -> None:
         """Test that files follow consistent naming patterns."""
         class_dirs = ["bears/black bear", "bears/grizzly bear", "bears/teddy bear"]
 
         for class_dir in class_dirs:
             path = Path(class_dir)
             if path.exists():
-                image_files = []
+                image_files: list[Path] = []
                 for ext in ["*.jpg", "*.jpeg", "*.png"]:
                     image_files.extend(path.glob(ext))
 
                 for img_file in image_files:
                     # Check for common naming patterns
-                    filename = img_file.name.lower()
-
-                    # Should not contain spaces in filename
-                    assert (
-                        " " not in img_file.name
-                    ), f"Filename contains spaces: {img_file.name}"
+                    assert " " not in img_file.name, f"Filename contains spaces: {img_file.name}"
 
                     # Should have valid extension
                     assert img_file.suffix.lower() in [
@@ -115,14 +110,14 @@ class TestDatasetStructure:
 class TestImageQuality:
     """Test image quality and characteristics."""
 
-    def test_image_resolution(self):
+    def test_image_resolution(self) -> None:
         """Test that images have reasonable resolution."""
         class_dirs = ["bears/black bear", "bears/grizzly bear", "bears/teddy bear"]
 
         for class_dir in class_dirs:
             path = Path(class_dir)
             if path.exists():
-                image_files = []
+                image_files: list[Path] = []
                 for ext in ["*.jpg", "*.jpeg", "*.png"]:
                     image_files.extend(path.glob(ext))
 
@@ -133,32 +128,24 @@ class TestImageQuality:
                             width, height = img.size
 
                             # Check minimum resolution
-                            assert (
-                                width >= 50
-                            ), f"Image {img_file} too narrow: {width}px"
-                            assert (
-                                height >= 50
-                            ), f"Image {img_file} too short: {height}px"
+                            assert width >= 50, f"Image {img_file} too narrow: {width}px"
+                            assert height >= 50, f"Image {img_file} too short: {height}px"
 
                             # Check maximum resolution (reasonable limit)
-                            assert (
-                                width <= 8000
-                            ), f"Image {img_file} too wide: {width}px"
-                            assert (
-                                height <= 8000
-                            ), f"Image {img_file} too tall: {height}px"
+                            assert width <= 8000, f"Image {img_file} too wide: {width}px"
+                            assert height <= 8000, f"Image {img_file} too tall: {height}px"
 
                     except Exception as e:
                         pytest.fail(f"Failed to check image {img_file}: {e}")
 
-    def test_image_file_size(self):
+    def test_image_file_size(self) -> None:
         """Test that image files have reasonable sizes."""
         class_dirs = ["bears/black bear", "bears/grizzly bear", "bears/teddy bear"]
 
         for class_dir in class_dirs:
             path = Path(class_dir)
             if path.exists():
-                image_files = []
+                image_files: list[Path] = []
                 for ext in ["*.jpg", "*.jpeg", "*.png"]:
                     image_files.extend(path.glob(ext))
 
@@ -177,11 +164,11 @@ class TestImageQuality:
 class TestDataConsistency:
     """Test data consistency across the dataset."""
 
-    def test_consistent_file_extensions(self):
+    def test_consistent_file_extensions(self) -> None:
         """Test that all images use consistent file extensions."""
         class_dirs = ["bears/black bear", "bears/grizzly bear", "bears/teddy bear"]
 
-        extensions = set()
+        extensions: set[str] = set()
         for class_dir in class_dirs:
             path = Path(class_dir)
             if path.exists():
@@ -195,10 +182,10 @@ class TestDataConsistency:
         # Should not have too many different extensions
         assert len(extensions) <= 3, f"Too many different extensions: {extensions}"
 
-    def test_no_duplicate_files(self):
+    def test_no_duplicate_files(self) -> None:
         """Test that there are no duplicate filenames across classes."""
-        all_filenames = set()
-        duplicates = []
+        all_filenames: set[str] = set()
+        duplicates: list[str] = []
 
         class_dirs = ["bears/black bear", "bears/grizzly bear", "bears/teddy bear"]
 
